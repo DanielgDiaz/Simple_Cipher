@@ -48,3 +48,56 @@ class SimpleCipher
 
         $this->key = $key;
     }
+
+    public function generateRandomKey(): string{
+        $keyLength = rand(SimpleCipher::KEY_RAN_MIN_LENGTH, SimpleCipher::KEY_RAN_MAX_LENGTH);     //Crear una length key aleatoria
+        $keyValues = 'abcdefghijklmnopqrstuvwxyz';                                                 //Caracteres validos
+        $cipherKey = '';                                                                           //Inicializar string cifrado
+        $i = 0;                                                                                    //Inicializar Iterador
+        while($i < $keyLength) {
+            $cipherKey .= $keyValues[rand(0, 25)];                                                 //Añadir elementos aleatorios de la lista de caracteres validos
+            $i++;
+        }
+        return $cipherKey;
+    }
+
+    public function encode(string $plainText): string{
+        $plainTextArray = str_split($plainText);                                                //Convertir string en array
+        $encodedString  = '';
+
+        array_map(
+            function ($index, $plainTextChar) use (&$encodedString) {                                       //Calcula valor ASCII. Restar 97 para asegurar el calculo
+                $newAsciiValue = ord($plainTextChar) + $this->getCipherKeyCharacter($index) - 97;
+
+                if ($newAsciiValue > 122) {                                                                 //Si el valor resultante es mayor que z (122), restamos 122                                                                                                           
+                    $newAsciiValue = $newAsciiValue - 122 + 96;                                             //Sumamos 96 para corregir (a)
+                }
+                $encodedString .= chr($newAsciiValue);
+            },
+            array_keys($plainTextArray),
+            $plainTextArray
+        );
+        return $encodedString;
+    }
+
+    public function decode(string $cipherText): string{
+        $cipherTextArray = str_split($cipherText);
+        $decodedString   = '';
+        array_map(
+            function ($index, $cipherTextChar) use (&$decodedString) {
+                $newAsciiValue = ord($cipherTextChar) - $this->getCipherKeyCharacter($index) + 97;       //Calcular valor ASCII, sumamos 97
+                if ($newAsciiValue < 97) {                                                               //Si obtenemos valor menos que a (97) restamos 96 y le sumamos 122 (z)
+                    $newAsciiValue = 122 + ($newAsciiValue - 96);
+                }
+                $decodedString .= chr($newAsciiValue);
+            },
+            array_keys($cipherTextArray),
+            $cipherTextArray
+        );
+        return $decodedString;
+    }
+    protected function getCipherKeyCharacter(int $index): int{                                        //Obtener el valor de index
+        $keyIndex = $index % strlen($this->key);
+        return ord($this->key[$keyIndex]);
+    }
+}
